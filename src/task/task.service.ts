@@ -14,7 +14,6 @@ export class TaskService {
     };
 
     const createdTask = await this.prisma.task.create({ data });
-    console.log('data', createdTask);
     return createdTask;
   }
 
