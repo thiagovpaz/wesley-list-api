@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class TaskService {
@@ -30,15 +30,57 @@ export class TaskService {
     return tasks;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} task`;
+  async findOne(id: number, userId: number) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${id} not found or does not belong to the user`);
+    }
+
+    return task;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  async update(id: number, userId: number, updateTaskDto: UpdateTaskDto) {
+    const existingTask = await this.prisma.task.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
+
+    if (!existingTask) {
+      throw new NotFoundException(`Task with ID ${id} not found or does not belong to the user`);
+    }
+
+    const updatedTask = await this.prisma.task.update({
+      where: { id: id },
+      data: updateTaskDto,
+    });
+
+    return updatedTask;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  async remove(id: number, userId: number) {
+    const existingTask = await this.prisma.task.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
+
+    if (!existingTask) {
+      throw new NotFoundException(`Task with ID ${id} not found or does not belong to the user`);
+    }
+
+    await this.prisma.task.delete({
+      where: { id: id },
+    });
+
+    return { message: `Task with ID ${id} has been successfully deleted` };
   }
 }
