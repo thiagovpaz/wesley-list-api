@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -16,8 +16,12 @@ export class TaskController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: User) {
-    return this.taskService.findAll(user.id);
+  findAll(
+    @CurrentUser() user: User,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10
+  ) {
+    return this.taskService.findAll(user.id, Number(page), Number(limit));
   }
 
   @Get(':id')

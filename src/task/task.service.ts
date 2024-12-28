@@ -17,7 +17,16 @@ export class TaskService {
     return createdTask;
   }
 
-  async findAll(userId: number) {
+  async findAll(userId: number, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const totalTasks = await this.prisma.task.count({
+      where: {
+        userId: userId,
+      },
+    });
+
     const tasks = await this.prisma.task.findMany({
       where: {
         userId: userId,
@@ -25,8 +34,18 @@ export class TaskService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip: skip,
+      take: take,
     });
-    return tasks;
+
+    const totalPages = Math.ceil(totalTasks / limit);
+
+    return {
+      tasks,
+      totalPages,
+      currentPage: page,
+      totalTasks,
+    };
   }
 
   async findOne(id: number, userId: number) {
